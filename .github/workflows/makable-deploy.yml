@@ -1,0 +1,39 @@
+# Deploys this site to GitHub Pages when makable publishes it (or when you run it from the Actions tab).
+# Pushing doesn't deploy: changes made on GitHub go live with the next publish. makable writes this file on every
+# publish, so changes made here are replaced by the next publish.
+name: Deploy to GitHub Pages
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: makable-deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+env:
+  BRANCH: "master"
+  BASE_PATH: "/bhavesh/"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Collect the site's files
+        run: |
+          mkdir dist
+          find . -mindepth 1 -maxdepth 1 ! -name '.*' ! -name dist -exec cp -R {} dist/ \;
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deployment
+        uses: actions/deploy-pages@v4
